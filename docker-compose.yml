@@ -6,12 +6,22 @@ services:
       - POSTGRES_PASSWORD=postgres_password
   redis:
     image: redis:latest
-  server:
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - '3050:80'
+  api:
     build:
       dockerfile: Dockerfile.dev
       context: ./server
     volumes:
-      - /app/node_modules
+      - /usr/app/node_modules
       - /c/Users/trinirya/git/bountiful-ship/server:/app
     environment:
       - REDIS_HOST=redis
@@ -21,3 +31,17 @@ services:
       - PGDATABASE=postgres
       - PGPASSWORD=postgres_password
       - PGPORT=5432
+  client:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client
+    volumes:
+      - /usr/app/node_modules
+      - ./client:/usr/app
+  worker:
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./worker
+    volumes:
+      - /usr/app/node_modules
+      - ./worker:/usr/app
